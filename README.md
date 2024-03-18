@@ -24,18 +24,18 @@ So, in summary, the modified ```handle_connection``` function reads the content 
 ## Commit 3  
 I've added a ```404.html``` file:  
 ```html
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>Hello!</title>
-    </head>
-    <body>
-        <h1>Oops!</h1>
-        <p>Sorry, I don't know what you're asking for.</p>
-        <p>Rust is running from Dimas's machine.</p>
-    </body>
-    </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Hello!</title>
+</head>
+<body>
+    <h1>Oops!</h1>
+    <p>Sorry, I don't know what you're asking for.</p>
+    <p>Rust is running from Dimas's machine.</p>
+</body>
+</html>
 ```  
 
 And from the given refference from the instruction in Chapter 20, part: Validating the Request and Selectively Responding, I've modified my ```handle_connection``` function to this:  
@@ -93,3 +93,15 @@ fn handle_connection(mut stream: TcpStream) {
 ```  
 ![Commit 3 screen capture](/assets/images/commit3.png)  
 
+## Commit 4  
+In this modified ```handle_connection``` function, additional functionality is introduced to handle a specific type of request, namely ```GET /sleep HTTP/1.1```. Here's what the modification does:  
+    1. It still reads the request line from the client's HTTP request as before.  
+    2. Instead of directly checking the request line, it uses pattern matching (match) to match against different types of request lines.  
+    3. If the request line matches ```GET / HTTP/1.1```, indicating a request for the root path (```/```), it sets the status_line to ```HTTP/1.1 200 OK``` and filename to ```hello.html```.  
+    4. If the request line matches ```GET /sleep HTTP/1.1```, indicating a request to sleep for a certain period before responding, it introduces a delay of 10 seconds using ```thread::sleep(Duration::from_secs(10))```. After sleeping, it sets the status_line to ```HTTP/1.1 200 OK``` and filename to ```hello.html```.  
+    5. If the request line doesn't match any of the predefined patterns, it sets status_line to ```HTTP/1.1 404 NOT FOUND``` and filename to ```404.html```.  
+    6. After determining the appropriate ```status_line``` and filename, it reads the content of the file indicated by filename using ```fs::read_to_string()```.  
+    7. It calculates the length of the content string.  
+    8. It constructs an HTTP response containing the determined status_line, length, and contents.  
+    9. Finally, it writes the constructed HTTP response back to the client over the TCP stream.  
+In summary, this modification extends the functionality of the server to handle a special case where if the client requests ```GET /sleep HTTP/1.1```, the server sleeps for 10 seconds before responding with the content of ```hello.html```. Otherwise, it behaves as before, serving either ```hello.html``` for root requests or ```404.html``` for requests to non-existent resources.  
