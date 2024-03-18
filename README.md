@@ -107,7 +107,7 @@ In this modified ```handle_connection``` function, additional functionality is i
 In summary, this modification extends the functionality of the server to handle a special case where if the client requests ```GET /sleep HTTP/1.1```, the server sleeps for 10 seconds before responding with the content of ```hello.html```. Otherwise, it behaves as before, serving either ```hello.html``` for root requests or ```404.html``` for requests to non-existent resources.  
 
 ## Commit 5  
-### How does ThreadPool work?  
+### How does ```ThreadPool``` work?  
 Here's how it works:  
     1. ThreadPool Initialization (```ThreadPool::new```):  
         - It initializes a new thread pool with a specified size. The size determines the number of worker threads in the pool.  
@@ -127,3 +127,5 @@ Here's how it works:
         - The ```mpsc``` (multi-producer, single-consumer) channel allows multiple threads to send jobs to worker threads concurrently while ensuring that each job is only processed by one worker.  
 In summary, the thread pool manages a fixed number of worker threads. Jobs are submitted to the pool and executed concurrently by the worker threads, providing a simple mechanism for parallel execution of tasks.  
 
+## Commit 6  
+https://doc.rust-lang.org/book/ch12-03-improving-error-handling-and-modularity.html suggests using the ```build``` method instead of ```new``` when initializing the ```ThreadPool```, arguing that ```new``` may cause an error if the number of threads given is too small. However, this argument is incorrect because the expectation of the ```new``` method is success. Therefore, it is recommended to replace the ```new``` method with ```build```, which returns ```Result```. Then, when the value is returned to the caller, it can be unwrapped to get the value of the execution result.  
