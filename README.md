@@ -105,3 +105,25 @@ In this modified ```handle_connection``` function, additional functionality is i
     8. It constructs an HTTP response containing the determined status_line, length, and contents.  
     9. Finally, it writes the constructed HTTP response back to the client over the TCP stream.  
 In summary, this modification extends the functionality of the server to handle a special case where if the client requests ```GET /sleep HTTP/1.1```, the server sleeps for 10 seconds before responding with the content of ```hello.html```. Otherwise, it behaves as before, serving either ```hello.html``` for root requests or ```404.html``` for requests to non-existent resources.  
+
+## Commit 5  
+### How does ThreadPool work?  
+Here's how it works:  
+    1. ThreadPool Initialization (```ThreadPool::new```):  
+        - It initializes a new thread pool with a specified size. The size determines the number of worker threads in the pool.  
+        - It creates a channel (```mpsc::channel```) for communication between the main thread (which submits jobs) and the worker threads.  
+        - It creates a vector to hold the worker threads.  
+        - For each worker thread, it creates a new Worker struct, passing it the ID and a clone of the receiver end of the channel.  
+    2. Worker Creation (```Worker::new```):  
+        - Each worker thread is created with a closure that runs in an infinite loop.  
+        - Inside the loop, the worker waits for a job to be sent over the channel.  
+        - Once a job is received, the worker executes it.  
+    3. Job Execution (```ThreadPool::execute```):  
+        - To execute a job, the main thread places the job inside a box and sends it over the channel to one of the worker threads.  
+        - The job is then executed by the worker thread.  
+    4. Concurrency and Communication:  
+        - The ```Arc<Mutex<mpsc::Receiver<Job>>>``` is shared among all worker threads. This allows multiple threads to access the receiver end of the channel safely.  
+        - The ```Mutex``` ensures that only one worker thread can receive a job at a time to prevent data races.  
+        - The ```mpsc``` (multi-producer, single-consumer) channel allows multiple threads to send jobs to worker threads concurrently while ensuring that each job is only processed by one worker.  
+In summary, the thread pool manages a fixed number of worker threads. Jobs are submitted to the pool and executed concurrently by the worker threads, providing a simple mechanism for parallel execution of tasks.  
+
